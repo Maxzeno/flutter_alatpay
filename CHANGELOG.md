@@ -1,6 +1,10 @@
+## 0.0.4
+
+* Added a flutter app as example
+
 ## 0.0.3
 
-* Updated on README and Pubspec.yaml
+* Updated README and Pubspec.yaml
 
 ## 0.0.2
 
