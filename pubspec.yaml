@@ -2,6 +2,7 @@ name: flutter_alatpay
 description: "Wema Bank AlatPay payment SDK."
 version: 0.0.1
 homepage: https://github.com/Maxzeno/flutter_alatpay
+repository: https://github.com/Maxzeno/flutter_alatpay
 
 environment:
   sdk: '>=3.2.3 <4.0.0'

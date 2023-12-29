@@ -10,7 +10,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 class AlatPayWidget extends StatefulWidget {
   final String apiKey;
   final String businessId;
-  final String metaData;
+  final Map? metaData;
   final String email;
   final String phone;
   final String firstName;
@@ -23,12 +23,12 @@ class AlatPayWidget extends StatefulWidget {
     super.key,
     required this.apiKey,
     required this.businessId,
-    this.metaData = 'null',
+    this.metaData,
     required this.email,
     this.phone = '',
     this.firstName = '',
     this.lastName = '',
-    this.currency = '"NGN"',
+    this.currency = 'NGN',
     required this.amount,
     required this.onTransaction,
     this.onClose,
@@ -45,14 +45,15 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
   void initState() {
     super.initState();
 
-    String metaData = widget.metaData;
-    String apiKey = widget.apiKey;
-    String businessId = widget.businessId;
-    String email = widget.email;
-    String phone = widget.phone;
-    String firstName = widget.firstName;
-    String lastName = widget.lastName;
-    String currency = widget.currency;
+    String metaData =
+        widget.metaData == null ? 'null' : jsonEncode(widget.metaData);
+    String apiKey = '"${widget.apiKey}"';
+    String businessId = '"${widget.businessId}"';
+    String email = '"${widget.email}"';
+    String phone = '"${widget.phone}"';
+    String firstName = '"${widget.firstName}"';
+    String lastName = '"${widget.lastName}"';
+    String currency = '"${widget.currency}"';
     String amount = widget.amount;
 
     String html = """
