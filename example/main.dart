@@ -23,21 +23,24 @@ class _MyAppState extends State<MyApp> {
     String currency = 'NGN';
     String amount = '100000';
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return AlatPayWidget(
-        apiKey: apiKey,
-        businessId: businessId,
-        email: email,
-        phone: phone,
-        firstName: firstName,
-        lastName: lastName,
-        currency: currency,
-        amount: amount,
-        onTransaction: (response) {
-          // do something with response
-        },
-      );
-    }));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return AlatPayWidget(
+          apiKey: apiKey,
+          businessId: businessId,
+          email: email,
+          phone: phone,
+          firstName: firstName,
+          lastName: lastName,
+          currency: currency,
+          amount: amount,
+          onTransaction: (response) {
+            // do something with response
+          },
+        );
+      }),
+    );
   }
 
   @override
@@ -45,7 +48,9 @@ class _MyAppState extends State<MyApp> {
     return Scaffold(
       body: SafeArea(
         child: ElevatedButton(
-            onPressed: _payment, child: const Text('Go to Payment')),
+          onPressed: _payment,
+          child: const Text('Go to Payment'),
+        ),
       ),
     );
   }

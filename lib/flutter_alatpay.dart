@@ -144,6 +144,11 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return WebViewWidget(controller: _controller);
+    return ListView(
+      shrinkWrap: true,
+      children: [
+        WebViewWidget(controller: _controller),
+      ],
+    );
   }
 }

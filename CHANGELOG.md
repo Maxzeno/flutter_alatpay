@@ -1,6 +1,10 @@
+## 0.0.3
+
+* Updated on README and Pubspec.yaml
+
 ## 0.0.2
 
-* Added better README
+* Added example in README
 
 ## 0.0.1
 
