@@ -1,20 +1,18 @@
-// ignore_for_file: unnecessary_string_interpolations
-
 import 'package:flutter/material.dart';
 import 'package:flutter_alatpay/flutter_alatpay.dart';
 
 void main() {
-  runApp(const MaterialApp(home: MyHome()));
+  runApp(const MaterialApp(home: MyApp()));
 }
 
-class MyHome extends StatefulWidget {
-  const MyHome({super.key});
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
   @override
-  State<MyHome> createState() => _MyHomeState();
+  State<MyApp> createState() => _MyAppState();
 }
 
-class _MyHomeState extends State<MyHome> {
+class _MyAppState extends State<MyApp> {
   void _payment() {
     String apiKey = 'eebb6239d69e4a7f813153564b764321';
     String businessId = '559r9b55-c939-4b30-2005-08dc0162527h';
