@@ -1,0 +1,3 @@
+## 0.0.1
+
+* First version of the first Wema Bank AlatPay payment SDK by Emmanuel Nwaegunwa
