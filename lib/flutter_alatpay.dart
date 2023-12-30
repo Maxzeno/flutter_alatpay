@@ -3,9 +3,7 @@ library flutter_alatpay;
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:webviewx/webviewx.dart';
 
 class AlatPayWidget extends StatefulWidget {
   final String apiKey;
@@ -39,8 +37,8 @@ class AlatPayWidget extends StatefulWidget {
 }
 
 class AlatPayWidgetState extends State<AlatPayWidget> {
-  late final WebViewController _controller;
-
+  late WebViewXController webviewController;
+  String html = "";
   @override
   void initState() {
     super.initState();
@@ -56,7 +54,7 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
     String currency = '"${widget.currency}"';
     String amount = widget.amount;
 
-    String html = """
+    html = """
     <!DOCTYPE html>
     <html lang="en">
 
@@ -77,16 +75,16 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
             phone: $phone,
             firstName: $firstName,
             lastName: $lastName,
-            metaData: $metaData,
+            metadata: $metaData,
             currency: $currency,
             amount: $amount,
 
             onTransaction: function (response) {
-                console.log("paymentsuccess", response)
+              paymentsuccess(JSON.stringify(response))
             },
 
             onClose: function () {
-                console.log("paymentcancel")
+              paymentcancel("payment cancel")
             }
         });
 
@@ -99,56 +97,45 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
 
     </html>
     """;
-
-    late final PlatformWebViewControllerCreationParams params;
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
-
-    final WebViewController controller =
-        WebViewController.fromPlatformCreationParams(params);
-
-    controller
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setOnConsoleMessage((message) {
-        debugPrint('flutter message.message ${message.message}');
-        if (message.message.startsWith('paymentsuccess')) {
-          String respStr = message.message.split('paymentsuccess')[1];
-          dynamic resp = jsonDecode(respStr);
-          widget.onTransaction(resp);
-        }
-        if (message.message == 'paymentcancel') {
-          if (widget.onClose == null) {
-            Navigator.pop(context);
-          } else {
-            widget.onClose!();
-          }
-        }
-      })
-      ..enableZoom(true)
-      ..loadHtmlString(html);
-
-    if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true);
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
-
-    _controller = controller;
+    print(html);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
-      children: [
-        WebViewWidget(controller: _controller),
-      ],
-    );
+    final media = MediaQuery.of(context).size;
+    return Scaffold(
+        body: Center(
+      // Look here!
+      child: WebViewX(
+          dartCallBacks: <DartCallback>{
+            DartCallback(
+              name: 'paymentsuccess',
+              callBack: (message) {
+                print('message success gotten $message');
+                dynamic resp = jsonDecode(message);
+                print('the resp $resp');
+                widget.onTransaction(resp);
+              },
+            ),
+            DartCallback(
+              name: 'paymentcancel',
+              callBack: (message) {
+                print('message cancel gotten $message');
+                if (widget.onClose == null) {
+                  Navigator.pop(context);
+                } else {
+                  widget.onClose!();
+                }
+              },
+            ),
+          },
+          width: media.width,
+          height: media.height,
+          initialContent: html,
+          initialSourceType: SourceType.html,
+          onWebViewCreated: (controller) {
+            webviewController = controller;
+          }),
+    ));
   }
 }

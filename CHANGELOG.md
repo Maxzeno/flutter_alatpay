@@ -1,3 +1,7 @@
+## 0.0.5
+
+* Added support for web
+
 ## 0.0.4
 
 * Added a flutter app as example
