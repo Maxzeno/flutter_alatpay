@@ -14,33 +14,34 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   void _payment() {
-    String apiKey = 'eebb6239d69e4a7f813153564b766093';
-    String businessId = '110e9b55-c939-4b30-2005-08dc0162570b';
+    String apiKey = 'primary or secondary key (api key)';
+    String businessId = 'business id';
     String email = 'mmnlchidera@gmail.com';
     String phone = '+2349077745730';
     String firstName = 'Emmanuel';
     String lastName = 'Nwaegunwa';
     String currency = 'NGN';
     String amount = '100000';
+    Map metaData = {
+      'key': 'value',
+    };
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) {
-        return AlatPayWidget(
-          apiKey: apiKey,
-          businessId: businessId,
-          email: email,
-          phone: phone,
-          firstName: firstName,
-          lastName: lastName,
-          currency: currency,
-          amount: amount,
-          onTransaction: (response) {
-            // do something with response
-          },
-        );
-      }),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return AlatPayWidget(
+        apiKey: apiKey,
+        businessId: businessId,
+        email: email,
+        phone: phone,
+        firstName: firstName,
+        lastName: lastName,
+        currency: currency,
+        amount: amount,
+        metaData: metaData,
+        onTransaction: (response) {
+          // do something with response
+        },
+      );
+    }));
   }
 
   @override
@@ -48,9 +49,7 @@ class _MyAppState extends State<MyApp> {
     return Scaffold(
       body: SafeArea(
         child: ElevatedButton(
-          onPressed: _payment,
-          child: const Text('Go to Payment'),
-        ),
+            onPressed: _payment, child: const Text('Go to Payment')),
       ),
     );
   }
