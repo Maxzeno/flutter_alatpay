@@ -1,0 +1,314 @@
+// eslint-disable-next-line no-unused-expressions
+!(function () {
+  /**
+   * All Configuration data
+   * ---
+   * - To & fro communication between iframe ui and merchant page happens through postMessage api. Check @more: onMessageReceived method
+   * - The Dialog data field content will be posted to iframe for basic initialisation before the iframe content get rendered.
+   */
+  let config = {
+    appName: "ALATpay",
+    preloaderIframeId: "id1",
+
+    dialog: {
+      id: "id2",
+      baseUrl: new URL(document.currentScript.src).origin, //"http://localhost:3000",
+      merchantUrl: () => "https://lagos-alat-blueapi.azure-api.net/merchant-onboarding/api/v1",
+      // merchantUrl: () => "https://WEMA-PAY-APIMGT.azure-api.net/merchant-onboarding/api/v1",
+      sendMessage: (type, data) => {
+        document
+          .getElementById(config.dialog.id)
+          .contentWindow.postMessage({ type, data }, "*");
+      },
+      setup: {
+        data: {
+          // APIM Subscription Token
+          apiKey: null,
+
+          // Business Information
+          businessId: "", // business id
+          amount: 0,
+          currency: "NGN",
+          orderId: "",
+          businessName: null,
+          description: null,
+          business: null,
+
+          // Customer Information
+          email: "",
+          firstName: "",
+          lastName: "",
+          phone: "",
+          metadata: null,
+
+          // Others
+          transactionCharge: 0,
+          customButtonId: null, // Customized Button Id for html inline implementation triggers
+          enabledOnTransactionCallback: false,
+        },
+        callback: {
+          onClose: () =>
+            console.log(`#${config.dialog.id} payment dialog closed`),
+          onTransaction: () =>
+            console.log(`#${config.dialog.id} transaction completed`),
+        },
+        global: {
+          lastTransaction: null,
+        },
+      },
+      onClose: () => {
+        document.getElementById(config.preloaderIframeId).remove();
+        document.getElementById(config.dialog.id).remove();
+        config.dialog.setup.callback.onClose();
+      },
+      show: () => showDialog(),
+      setVisible: () => {
+        if (!config.preloaderIframeId || !config.dialog.id)
+          return console.error(
+            "Please call show() instead",
+            config.preloaderIframeId,
+            config.dialog.id
+          );
+        document
+          .getElementById(config.preloaderIframeId)
+          .contentWindow.document.write("");
+        document.getElementById(config.dialog.id).style.display = "block";
+      },
+    },
+  };
+
+  /**
+   * Event Message Receiver (Interpret message received from the Dialog)
+   */
+  let eventMethod = window.addEventListener
+    ? "addEventListener"
+    : "attachEvent";
+  window[eventMethod]("message", onMessageReceived, false);
+
+  function onMessageReceived(event) {
+    let origin = event.origin || event.originalEvent.origin;
+    if ([config.dialog.baseUrl, window.location.origin].indexOf(origin) <= -1)
+      return;
+
+    let type = event.data.type;
+    let data = event.data.data;
+
+    // Send Business details after Frame is ready, To prevent Safari from running postMessage before iframe loads.
+    if (type === "onFrameReady") {
+      config.dialog.sendMessage("setup", config.dialog.setup.data);
+    }
+    // Render dialog once client initializing is completed
+    if (type === "onInitializingCompleted") config.dialog.setVisible();
+    // Close Payment Dialog
+    else if (type === "onCloseDialog") config.dialog.onClose();
+    // Call onTransaction callback method for a successful payment
+    else if (type === "onTransaction") {
+      // Only successful trans, and avoid processing duplicate transactions
+      if (
+        !data.status ||
+        config.dialog.setup.global.lastTransaction?.id === data.data.id
+      )
+        return;
+      if (config.dialog.setup.callback.onTransaction)
+        config.dialog.setup.callback.onTransaction(data);
+      // keep last transaction
+      config.dialog.setup.global.lastTransaction = data.data;
+    }
+  }
+
+  /**
+     * Default button.
+     * Usage
+     *  <form action="callback-url.php" method="POST" >
+             <script
+                 src="alatpay.js"
+                 data-key="pk_test_eaf9caad0d98efd40d644dd6bac14447ec3b69f4"
+                 data-email="samsonsamson@iyanu.com"
+                 data-amount="50000">
+             </script>
+        </form>
+     */
+  function tryRenderDefaultButton() {
+    let ia,
+      sourceScript =
+        document.currentScript ||
+        ((ia = document.getElementsByTagName("script")), ia[ia.length - 1]);
+    if (
+      Object.keys(sourceScript.dataset).length <= 0 ||
+      !sourceScript.dataset.businessId
+    )
+      return;
+
+    // Init Dialog fields
+    initDialogSetup(sourceScript.dataset);
+
+    // Init Default button
+    let button;
+    // eslint-disable-next-line no-unused-expressions
+    config.dialog.setup.data.customButtonId
+      ? (button = document.getElementById(
+          config.dialog.setup.data.customButtonId
+        ))
+      : (((button =
+          document.createElement(
+            "button"
+          )).innerHTML = `<span><img src='${config.dialog.baseUrl}/img/button.png' alt='Pay Securely with Alatpay'></span>`),
+        sourceScript.parentNode.insertBefore(button, sourceScript.nextSibling));
+    // set onclick event
+    button.setAttribute("class", `alatpay-button${config.dialog.id}`);
+    button.addEventListener(
+      "click",
+      function (t) {
+        t.preventDefault();
+        config.dialog.show();
+      },
+      false
+    );
+  }
+  tryRenderDefaultButton();
+
+  /**
+   * Make HttpRequest
+   */
+  function httpRequest(url, method, payload, callback = (isTrue) => {}) {
+    return fetch(url, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        cache: "force-cache",
+      },
+      body: method.toUpperCase() !== "GET" ? JSON.stringify(payload) : null,
+    })
+      .then(async (response) => await response.json())
+      .then((response) =>
+        response.status ? callback(response) : callback(false)
+      )
+      .catch(() => callback(false));
+  }
+
+  /**
+   * Fetch Business Information
+   */
+  function fetchBusiness(callback = (isTrue) => {}) {
+    // prefetch business
+    if (!config.dialog.setup.data.businessId) {
+      console.log(
+        "BusinessId and ApiKey is required in the ALATpay Setup Configuration!"
+      );
+      return callback(false);
+    }
+    if (
+      config.dialog.setup.data.business &&
+      config.dialog.setup.data.business.id
+    )
+      return callback(true);
+    let url = `${config.dialog.merchantUrl()}/merchants/businesses/${
+      config.dialog.setup.data.businessId
+    }?subscription-key=${config.dialog.setup.data.apiKey}`;
+    return httpRequest(url, "GET", null, (response) => {
+      // console.log("Business Information", response);
+      config.dialog.setup.data.business = response.data;
+      return callback(true);
+    });
+  }
+
+  /**
+   * Setup script.
+   * @param data the payload coming from merchant setup.
+   */
+  function initDialogSetup(data = {}) {
+    // Map Object entries
+    Object.entries(data).forEach(([key, value]) => {
+      // eslint-disable-next-line array-callback-return
+      if (
+        !config.dialog.setup.data.hasOwnProperty(key) &&
+        !config.dialog.setup.callback.hasOwnProperty(key)
+      )
+        return;
+      // callbacks
+      if (typeof value === "function")
+        config.dialog.setup.callback[key] = value;
+      // data. simple and transferable fields
+      else config.dialog.setup.data[key] = value;
+    });
+
+    // init additional fields
+    config.dialog.setup.data.enabledOnTransactionCallback =
+      data.hasOwnProperty("onTransaction") && data.onTransaction != null;
+
+    // prefetch business
+    fetchBusiness();
+
+    // return dialog config
+    return config.dialog;
+  }
+
+  /**
+   * @type {{setup: (function(*=): {setVisible: function(): (void|undefined), baseUrl: string, onClose: function(): void, show: function(): void|undefined, sendMessage: function(*, *): void, setup: {data: {lastName: string, amount: number, metadata: null, apiKey: null, business: null, orderId: string, businessId: string, businessName: null, description: null, enabledOnTransactionCallback: boolean, transactionCharge: number, firstName: string, phone: string, currency: string, email: string, customButtonId: null}, callback: {onTransaction: function(): void, onClose: function(): void}, global: {lastTransaction: null}}, id: string, merchantUrl: function(): string})}}
+   */
+  window.Alatpay = { setup: initDialogSetup };
+
+  /**
+   * Prepare Dialog
+   */
+  function showDialog() {
+    //console.log("Loading dialog with configuration", config.dialog.setup.data)
+
+    /**
+     * For Unique id
+     */
+    function randomId() {
+      return "alatpay_" + Math.random().toString(36).substr(2, 9);
+    }
+
+    /**
+     * Transparent Iframe Generator
+     */
+    function createTransparentIframe(id) {
+      let frame = document.createElement("iframe");
+      frame.setAttribute("frameBorder", "0");
+      frame.setAttribute("allowtransparency", "true");
+      frame.id = id;
+      frame.name = "frame-" + frame.id;
+      frame.style.cssText =
+        "z-index: 999999999999999;background: transparent;border: 0px none transparent;overflow-x: hidden;overflow-y: hidden;margin: 0;padding: 0;-webkit-tap-highlight-color: transparent;-webkit-touch-callout: none;position: fixed;left: 0;top: 0;width: 100%;height: 100%;transition: opacity 0.3s;-webkit-transition: opacity 0.3s;";
+      frame.style.display = "none";
+      document.body.appendChild(frame);
+      return frame;
+    }
+
+    // Validate Config Data is set
+    let setupData = config.dialog.setup.data;
+    if (!setupData)
+      return console.error(
+        "Please setup payment configuration. Sample configuration data is: ",
+        config.dialog.setup
+      );
+
+    // Init Background
+    config.preloaderIframeId = randomId();
+    let bgFrame = createTransparentIframe(config.preloaderIframeId);
+    bgFrame.style.background = "rgba(0, 0, 0, 0.75)";
+    let content = bgFrame.contentWindow.document;
+    bgFrame.style.display = "block";
+    content.open();
+    content.write(
+      '<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <meta http-equiv="X-UA-Compatible" content="ie=edge"> <title>Paystack Checkout Loader</title> <style> .app-loader { margin: 200px 0; text-align: center; color: white; } @keyframes app-loader__spinner { 0% { opacity: 1; } 100% { opacity: 0; } } @-webkit-keyframes app-loader__spinner { 0% { opacity: 1; } 100% { opacity: 0; } } .app-loader__spinner { position: relative; display: inline-block; } .app-loader__spinner div { left: 95px; top: 35px; position: absolute; -webkit-animation: app-loader__spinner linear 1s infinite; animation: app-loader__spinner linear 1s infinite; background: white; width: 10px; height: 30px; border-radius: 40%; -webkit-transform-origin: 5px 65px; transform-origin: 5px 65px; } .app-loader__spinner div:nth-child(1) { -webkit-transform: rotate(0deg); transform: rotate(0deg); -webkit-animation-delay: -0.916666666666667s; animation-delay: -0.916666666666667s; } .app-loader__spinner div:nth-child(2) { -webkit-transform: rotate(30deg); transform: rotate(30deg); -webkit-animation-delay: -0.833333333333333s; animation-delay: -0.833333333333333s; } .app-loader__spinner div:nth-child(3) { -webkit-transform: rotate(60deg); transform: rotate(60deg); -webkit-animation-delay: -0.75s; animation-delay: -0.75s; } .app-loader__spinner div:nth-child(4) { -webkit-transform: rotate(90deg); transform: rotate(90deg); -webkit-animation-delay: -0.666666666666667s; animation-delay: -0.666666666666667s; } .app-loader__spinner div:nth-child(5) { -webkit-transform: rotate(120deg); transform: rotate(120deg); -webkit-animation-delay: -0.583333333333333s; animation-delay: -0.583333333333333s; } .app-loader__spinner div:nth-child(6) { -webkit-transform: rotate(150deg); transform: rotate(150deg); -webkit-animation-delay: -0.5s; animation-delay: -0.5s; } .app-loader__spinner div:nth-child(7) { -webkit-transform: rotate(180deg); transform: rotate(180deg); -webkit-animation-delay: -0.416666666666667s; animation-delay: -0.416666666666667s; } .app-loader__spinner div:nth-child(8) { -webkit-transform: rotate(210deg); transform: rotate(210deg); -webkit-animation-delay: -0.333333333333333s; animation-delay: -0.333333333333333s; } .app-loader__spinner div:nth-child(9) { -webkit-transform: rotate(240deg); transform: rotate(240deg); -webkit-animation-delay: -0.25s; animation-delay: -0.25s; } .app-loader__spinner div:nth-child(10) { -webkit-transform: rotate(270deg); transform: rotate(270deg); -webkit-animation-delay: -0.166666666666667s; animation-delay: -0.166666666666667s; } .app-loader__spinner div:nth-child(11) { -webkit-transform: rotate(300deg); transform: rotate(300deg); -webkit-animation-delay: -0.083333333333333s; animation-delay: -0.083333333333333s; } .app-loader__spinner div:nth-child(12) { -webkit-transform: rotate(330deg); transform: rotate(330deg); -webkit-animation-delay: 0s; animation-delay: 0s; } .app-loader__spinner { width: 40px; height: 40px; -webkit-transform: translate(-20px, -20px) scale(0.2) translate(20px, 20px); transform: translate(-20px, -20px) scale(0.2) translate(20px, 20px); } </style> </head> <body> <div id="app-loader" class="app-loader"> <div id="spinner" class="app-loader__spinner"> <div></div><div></div><div> </div>   <div></div><div></div><div></div><div>  </div><div></div><div></div><div></div><div></div><div></div>  </div>    <div>' +
+        "   <button style=\"border:1px solid rgba(255,255,255,0.79);padding: 5px 15px; border-radius:15px; background: transparent; color:rgba(255,255,255,0.79)\" onclick=\"window.parent.postMessage({type: 'onCloseDialog'}, '*')\">Cancel</button> " +
+        "</div></div> </body> </html>"
+    );
+    content.close();
+
+    // Init Dialog (fetch business first if not fetched)
+    fetchBusiness(() => {
+      config.dialog.id = randomId();
+      let dialogFrame = createTransparentIframe(config.dialog.id);
+      dialogFrame.src = config.dialog.baseUrl;
+      dialogFrame.onload = () => {
+        // post setup config data to dialog
+        config.dialog.sendMessage("setup", setupData);
+      };
+    });
+  }
+})();

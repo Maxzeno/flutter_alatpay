@@ -97,7 +97,6 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
 
     </html>
     """;
-    print(html);
   }
 
   @override
@@ -111,16 +110,13 @@ class AlatPayWidgetState extends State<AlatPayWidget> {
             DartCallback(
               name: 'paymentsuccess',
               callBack: (message) {
-                print('message success gotten $message');
                 dynamic resp = jsonDecode(message);
-                print('the resp $resp');
                 widget.onTransaction(resp);
               },
             ),
             DartCallback(
               name: 'paymentcancel',
               callBack: (message) {
-                print('message cancel gotten $message');
                 if (widget.onClose == null) {
                   Navigator.pop(context);
                 } else {
