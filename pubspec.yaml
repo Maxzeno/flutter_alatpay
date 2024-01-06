@@ -1,6 +1,6 @@
 name: flutter_alatpay
 description: "A Flutter package for integrating Wema Bank AlatPay payment into your mobile applications by Emmanuel Nwaegunwa. AlatPay is a payment gateway service."
-version: 0.0.5
+version: 0.0.7
 homepage: https://github.com/Maxzeno/flutter_alatpay
 repository: https://github.com/Maxzeno/flutter_alatpay
 issue_tracker: https://github.com/Maxzeno/flutter_alatpay/issues

@@ -1,6 +1,54 @@
-# Wema Bank AlatPay payment SDK
+# AlatPay Payment SDK for Flutter: Seamless Integration with WEMA Bank's Alatpay Gateway
 
-A Flutter package for integrating Wema Bank AlatPay payment into your mobile applications by Emmanuel Nwaegunwa. AlatPay is a payment gateway service.
+Integrate WEMA Bank's Alatpay payment gateway effortlessly into your Flutter project with the AlatPayFlutter class – a versatile Flutter widget. This class provides a WebView that loads the Alatpay payment page, complete with transaction details, streamlining the payment processing experience. Handling responses from the payment gateway is simplified through callback functions, allowing you to manage both successful transactions and errors seamlessly.
+
+## Key Features:
+
+### Integration with Alatpay Payment Gateway
+Easily integrate the Moamalat payment gateway into your Flutter app using the AlatPayFlutter class.
+
+### WebView Integration
+The class offers WebView integration, loading Alatpay's payment page with transaction details for streamlined processing.
+
+### Transaction Handling
+Effortlessly manage responses from the payment gateway, with callback functions available for both successful transactions and errors.
+
+### Secure Transactions
+Generate a secure hash as required by Alatpay, ensuring the utmost security for your transactions.
+
+### Customizable
+Tailor the class to your specific needs by configuring parameters such as apiKey, businessId, currency, amount, and metaData for payment processing.
+
+### Cross-Platform Support
+AlatPayFlutter supports Android, iOS, and Web platforms, with additional platform compatibility in the pipeline.
+
+## Author:
+- [LinkedIn Badge]
+- [Twitter Badge]
+- [My Badge]
+
+## Documentation:
+
+### Required Parameters:
+
+- **businessId**: The business ID obtained from AlatPay.
+- **amount**: The transaction amount to be charged.
+- **apiKey**: The API key obtained from AlatPay.
+
+### Callback Functions:
+
+- **onTransaction**: A callback function triggered upon successful completion of the payment.
+- **onClose**: A callback function activated when the service is closed.
+
+Overall, the AlatPayFlutter class offers a convenient and secure solution for seamlessly integrating the AlatPay payment gateway into your Flutter app. Simplify your payment processing and enhance the user experience with this comprehensive SDK.
+
+## Reach Me
+
+[Linkedin](https://www.linkedin.com/in/emmanuel-nwaegunwa/)
+[Twitter](https://twitter.com/_maxzeno)
+[My Portfolio](https://maxzeno.vercel.app/)
+
+Explore AlatPayFlutter now to elevate your payment gateway integration experience in Flutter!
 
 ## Installation
 

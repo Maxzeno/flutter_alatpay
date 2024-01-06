@@ -1,3 +1,11 @@
+## 0.0.7
+
+* Worked on a readme
+
+## 0.0.6
+
+* Worked on web platform
+
 ## 0.0.5
 
 * Added support for web
