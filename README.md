@@ -34,6 +34,16 @@ AlatPayFlutter supports Android, iOS, and Web platforms, with additional platfor
 - **businessId**: The business ID obtained from AlatPay.
 - **amount**: The transaction amount to be charged.
 - **apiKey**: The API key obtained from AlatPay.
+- **email**: The user's email address
+- **onTransaction**: The function that runs after the transaction is completed
+
+### Optional Parameters:
+
+- **phone**: The user's phone number
+- **firstName**: The user's first name
+- **lastName**: The user's last name
+- **currency**: The currency
+- **metaData**: A key value pair of data to send with response
 
 ### Callback Functions:
 
