@@ -1,6 +1,6 @@
 # AlatPay Payment SDK for Flutter: Seamless Integration with WEMA Bank's Alatpay Gateway
 
-Integrate WEMA Bank's Alatpay payment gateway effortlessly into your Flutter project with the AlatPayWidget widget – a versatile Flutter widget. This widget provides a WebView that loads the Alatpay payment page, complete with transaction details, streamlining the payment processing experience. Handling responses from the payment gateway is simplified through callback functions, allowing you to manage both successful transactions and errors seamlessly.
+Integrate WEMA Bank's Alatpay payment gateway effortlessly into your Flutter project with the flutter_alatpay SDK. This SDK provides a WebView that loads the Alatpay payment page, complete with transaction details, streamlining the payment processing experience. Handling responses from the payment gateway is simplified through callback functions, allowing you to manage both successful transactions and errors seamlessly.
 
 ## Key Features:
 
